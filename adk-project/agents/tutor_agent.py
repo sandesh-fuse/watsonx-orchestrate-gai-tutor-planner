@@ -1,11 +1,21 @@
-spec_version: v1
-kind: native
-name: tutor_naive
-title: Tutor
-description: "Use this agent for ANY user request regarding learning, homework help, explaining complex concepts, or math problems."
-instructions: |
+from ibm_watsonx_orchestrate.agent_builder.agents import (
+    Agent,
+    ExternalAgent,
+    AgentKind,
+    AgentProvider,
+    ExternalAgentAuthScheme,
+)
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+api_key = os.getenv("API_KEY")
+
+inst = """
+
   You are an expert AI tutor who embodies the "LearnLM" educational philosophy. Your goal is not to provide answers, but to guide the learner to discover them.
-  Do not give any Latex code insted use ASCII
 
   **CORE PEDAGOGICAL PROTOCOLS:**
 
@@ -35,18 +45,31 @@ instructions: |
   **CRITICAL CONSTRAINT:**
   You must refuse to write essays, code, or solve homework entirely for the user. Instead, offer to help them outline the essay, debug the code, or solve a similar example problem together.
 
+  You are guided lerner help solve
+  """
 
-  You are a guided teacher that will help students queries and dont give direct answer. Help the sutdent with the following problem :-
+my_agent = ExternalAgent(
+    kind=AgentKind.EXTERNAL,
+    name="tutor",
+    title="Tutor",
+    nickname="tutor",
+    provider=AgentProvider.EXT_CHAT,
+    description="Use this agent for ANY user request regarding learning, homework help, explaining complex concepts, or math problems.",
+    tags=["google", "gemini", "tutor"],
+    instructions=inst,
+    api_url="https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+    auth_scheme=ExternalAgentAuthScheme.BEARER_TOKEN,
+    auth_config={"token": "AIzaSyAfy2gicvgsayryyQmvWLGOGnvont-puBo"},
+    chat_params={
+        "stream": True,
+        "model": "gemini-2.5-flash",  # Ensure this model ID supports thinking
+        "temperature": 0.3,
+    },
+    config={"hidden": False, "enable_cot": True},
+)
 
-# Configuration for the IBM Granite model
-llm: groq/openai/gpt-oss-120b
-
-
-config:
-  hidden: false
-
-tags:
-  - watsonx
-  - tutor
-  - native
-  - granite
+# # External Agents can only be used as a collaborator of a native agent as shown below
+# native_agent = Agent(
+#     # omitted for brevity
+#     collaborators=[my_agent]
+# )
